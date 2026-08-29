@@ -1,13 +1,16 @@
-name: Build executable
+name: Build and Release
 
 on:
+  push:
+    branches:
+      - main # Triggers automatically when the sync action pushes upstream changes to your fork
   workflow_dispatch:
 
 jobs:
-  build:
+  build-and-release:
     runs-on: windows-latest
     permissions:
-      contents: read
+      contents: write # Required to create the release and upload assets
 
     steps:
       - uses: actions/checkout@v5
@@ -26,9 +29,12 @@ jobs:
         shell: pwsh
         run: ./build.ps1 -Configuration Release
 
-      - name: Upload unsigned executable
-        uses: actions/upload-artifact@v6
+      - name: Create Release and Upload Executable
+        uses: softprops/action-gh-release@v2
         with:
-          name: WandEnhancer-unsigned
-          path: WandEnhancer/bin/Release/WandEnhancer.exe
-          if-no-files-found: error
+          tag_name: v1.0.0-${{ github.run_number }}
+          name: "WandEnhancer Release ${{ github.run_number }}"
+          files: |
+            WandEnhancer/bin/Release/WandEnhancer.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
